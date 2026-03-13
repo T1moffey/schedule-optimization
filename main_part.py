@@ -33,6 +33,7 @@ TOPIC_STOP_WORDS = [
 
 
 def build_demo_schedule() -> list[dict[str, str]]:
+    # Создает небольшое искусственное расписание с текстами занятий для демонстрации всего пайплайна.
     return [
         {
             "lesson_name": "mixed_control_example",
@@ -124,11 +125,14 @@ def build_demo_schedule() -> list[dict[str, str]]:
 
 
 def main() -> None:
+    # Запускает весь демонстрационный пайплайн: предобработка, сегментация, тематизация,
+    # построение связей между темами и занятиями, оценка расписания и его оптимизация.
     schedule = build_demo_schedule()
     texts = {x["lesson_name"]: x["text"] for x in schedule}
     initial_order = [x["lesson_name"] for x in schedule]
 
     def print_report(title: str, order: list[str], lesson_similarity: dict, lesson_edges: dict) -> None:
+        # Печатает краткий отчет по текущему порядку занятий и его значению функции согласованности.
         score = evaluate_lesson_order_coherence(
             lesson_order=order,
             lesson_similarity=lesson_similarity,
@@ -221,7 +225,10 @@ def main() -> None:
 
     print("\n=== ТЕМЫ ПО ЗАНЯТИЯМ ===")
     for lesson_name, profile in topic_results["lesson_topic_profiles"].items():
-        parts = [f"topic_{topic_id}={weight:.3f}" for topic_id, weight in sorted(profile.items(), key=lambda x: x[1], reverse=True)]
+        parts = [
+            f"topic_{topic_id}={weight:.3f}"
+            for topic_id, weight in sorted(profile.items(), key=lambda x: x[1], reverse=True)
+        ]
         print(f"{lesson_name}: " + (", ".join(parts) if parts else "-"))
 
     similarity_results = build_lesson_similarity_matrix(
@@ -264,9 +271,19 @@ def main() -> None:
     if directed:
         for i, x in enumerate(directed, 1):
             if x["decision"]["direction"] == "a->b":
-                a_id, a_name, b_id, b_name = x["topic_a_id"], x["topic_a_name"], x["topic_b_id"], x["topic_b_name"]
+                a_id, a_name, b_id, b_name = (
+                    x["topic_a_id"],
+                    x["topic_a_name"],
+                    x["topic_b_id"],
+                    x["topic_b_name"],
+                )
             else:
-                a_id, a_name, b_id, b_name = x["topic_b_id"], x["topic_b_name"], x["topic_a_id"], x["topic_a_name"]
+                a_id, a_name, b_id, b_name = (
+                    x["topic_b_id"],
+                    x["topic_b_name"],
+                    x["topic_a_id"],
+                    x["topic_a_name"],
+                )
 
             print(
                 f"{i}. topic_{a_id} ({a_name}) -> topic_{b_id} ({b_name}) | "
