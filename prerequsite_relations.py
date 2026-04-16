@@ -264,12 +264,13 @@ def load_example(
     return df, topic_to_text
 
 
-def save_graph(g: nx.DiGraph, file_path: str = "ace_graph.csv"):
-    with open(file_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["source", "target"])
-        writer.writerows(g.edges())
-
+def save_graph(
+    g: nx.DiGraph,
+    edges_file: str = "ace_graph_edges.csv",
+    nodes_file: str = "ace_graph_nodes.csv",
+):
+    pd.DataFrame({"concept": list(g.nodes())}).to_csv(nodes_file, index=False, encoding="utf-8-sig")
+    pd.DataFrame(list(g.edges()), columns=["source", "target"]).to_csv(edges_file, index=False, encoding="utf-8-sig")
 
 def run_from_csv(
     csv_file="C:\\Users\\timofey\\YandexDisk\\Code\\thesis\\EKG-Dataset-main\\0-100.csv",
@@ -289,7 +290,6 @@ def run_from_csv(
 
     save_graph(graph, output_file)
     print_graph(graph)
-    print(f"\nГраф сохранен в файл: {output_file}")
 
 
 if __name__ == "__main__":
