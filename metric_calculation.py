@@ -2,14 +2,19 @@ import pandas as pd
 import networkx as nx
 
 
-def load_graph_from_csv(file_path: str) -> nx.DiGraph:
-    df = pd.read_csv(file_path)
-    return nx.from_pandas_edgelist(
-        df,
-        source="source",
-        target="target",
-        create_using=nx.DiGraph,
-    )
+def load_graph_from_csv(
+    edges_file: str = "ace_graph_edges.csv",
+    nodes_file: str = "ace_graph_nodes.csv",
+) -> nx.DiGraph:
+    g = nx.DiGraph()
+
+    nodes_df = pd.read_csv(nodes_file)
+    g.add_nodes_from(nodes_df["concept"].astype(str))
+
+    edges_df = pd.read_csv(edges_file)
+    g.add_edges_from(edges_df[["source", "target"]].itertuples(index=False, name=None))
+
+    return g
 
 
 def compute_out_closeness_centrality(g: nx.DiGraph) -> dict[str, float]:
@@ -31,24 +36,14 @@ def compute_out_closeness_centrality(g: nx.DiGraph) -> dict[str, float]:
     return scores
 
 
-def compute_learning_effort(g: nx.DiGraph) -> dict[str, int]:
-    ancestors_cache = {}
+def compute_learning_effort(g: nx.DiGraph) -> dict[str, float]:
+    n = len(g)
 
-    def get_all_ancestors(node: str) -> set[str]:
-        if node in ancestors_cache:
-            return ancestors_cache[node]
-
-        preds = list(g.predecessors(node))
-        result = set(preds)
-
-        for p in preds:
-            result |= get_all_ancestors(p)
-
-        ancestors_cache[node] = result
-        return result
+    if n <= 1:
+        return {node: 0.0 for node in g.nodes()}
 
     return {
-        node: 1 + len(get_all_ancestors(node))
+        node: len(nx.ancestors(g, node)) / (n - 1)
         for node in g.nodes()
     }
 
@@ -89,6 +84,7 @@ def save_metrics(
     metrics_df.to_csv(output_metrics_file, index=False, encoding="utf-8-sig")
 
     print(f"Метрики сохранены в файл: {output_metrics_file}")
+    print(f"Всего концептов: {len(g)}")
     print("\nПервые строки результата:\n")
     print(metrics_df.head(20).to_string(index=False))
 
