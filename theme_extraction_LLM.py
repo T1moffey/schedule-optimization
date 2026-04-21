@@ -1,17 +1,18 @@
 import json
 import uuid
+import re
 import requests
 from openai import OpenAI
 
 # =========================
 # 1. AUTH KEY
 # =========================
-AUTH_KEY = "MDE5ZDk0YzUtZDIyYi03NmI4LWE0ZDQtNmY5YzEyYWJhMDkzOjQ2NzkxOTk2LTdjYzUtNDY3My1iZTFlLTJhOWRjZTI0NjlhNQ=="
+AUTH_KEY = "..."
 
 # =========================
 # 2. ФАЙЛЫ
 # =========================
-INPUT_JSON_PATH = "thesis\\RPD_SPBU\\rpd_2_2.json"
+INPUT_JSON_PATH = "rpd_2_2.json"
 OUTPUT_JSON_PATH = "topics_first_course.json"
 
 # =========================
@@ -91,12 +92,28 @@ def extract_concepts_for_course(auth_key: str, system_prompt: str, user_prompt: 
     )
 
     raw_answer = response.choices[0].message.content
+    print("RAW ANSWER:")
+    print(raw_answer)
+    print(repr(raw_answer))
     parsed = json.loads(raw_answer)
     return parsed
 
 
 # =========================
-# 8. ОБЪЕДИНЕНИЕ ТЕМ
+# 8. НОРМАЛИЗАЦИЯ ТЕМ
+# =========================
+def normalize_concept(text: str) -> str:
+    text = text.strip().lower()
+    text = text.replace("ё", "е")
+    text = text.replace("—", "-").replace("–", "-").replace("−", "-")
+    text = re.sub(r"\s*-\s*", "-", text)
+    text = re.sub(r"\s+", " ", text)
+    text = text.strip(" \t\n\r,;:.!?\"'«»()[]{}")
+    return text
+
+
+# =========================
+# 9. ОБЪЕДИНЕНИЕ ТЕМ
 # =========================
 def collect_concepts(parsed_response: dict) -> list[str]:
     result = []
@@ -112,7 +129,8 @@ def collect_concepts(parsed_response: dict) -> list[str]:
             if not isinstance(concept, str):
                 continue
 
-            concept = concept.strip()
+            concept = normalize_concept(concept)
+
             if not concept:
                 continue
 
@@ -124,7 +142,7 @@ def collect_concepts(parsed_response: dict) -> list[str]:
 
 
 # =========================
-# 9. СОХРАНЕНИЕ
+# 10. СОХРАНЕНИЕ
 # =========================
 def save_result(output_path: str, course_title: str, concepts: list[str]) -> None:
     result = {
@@ -136,7 +154,7 @@ def save_result(output_path: str, course_title: str, concepts: list[str]) -> Non
 
 
 # =========================
-# 10. ОСНОВНОЙ ЗАПУСК
+# 11. ОСНОВНОЙ ЗАПУСК
 # =========================
 def main():
     course_title, source_text = load_first_course(INPUT_JSON_PATH)
