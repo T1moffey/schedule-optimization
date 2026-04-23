@@ -273,8 +273,8 @@ def save_graph(
     pd.DataFrame(list(g.edges()), columns=["source", "target"]).to_csv(edges_file, index=False, encoding="utf-8-sig")
 
 def run_from_csv(
-    csv_file="C:\\Users\\timofey\\YandexDisk\\Code\\thesis\\EKG-Dataset-main\\0-100.csv",
-    descriptions_dir="C:\\Users\\timofey\\YandexDisk\\Code\\thesis\\EKG-Dataset-main\\concept_descriptions",
+    csv_file="EKG-Dataset-main/0-100.csv",
+    descriptions_dir="EKG-Dataset-main/concept_descriptions",
     output_file="ace_graph.csv",
 ):
     _, topic_to_text = load_example(csv_file, descriptions_dir)
