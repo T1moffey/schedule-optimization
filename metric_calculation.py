@@ -17,25 +17,6 @@ def load_graph_from_csv(
     return g
 
 
-def compute_out_closeness_centrality(g: nx.DiGraph) -> dict[str, float]:
-    n = len(g)
-    scores = {}
-
-    for node in g.nodes():
-        lengths = nx.single_source_shortest_path_length(g, node)
-        lengths.pop(node, None)
-
-        reachable = len(lengths)
-        if reachable == 0:
-            scores[node] = 0.0
-            continue
-
-        dist_sum = sum(lengths.values())
-        scores[node] = (reachable / dist_sum) * (reachable / (n - 1)) if n > 1 else 0.0
-
-    return scores
-
-
 def compute_learning_effort(g: nx.DiGraph) -> dict[str, float]:
     n = len(g)
 
@@ -50,9 +31,11 @@ def compute_learning_effort(g: nx.DiGraph) -> dict[str, float]:
 
 def compute_graph_metrics(g: nx.DiGraph) -> pd.DataFrame:
     pagerank = nx.pagerank(g, alpha=0.85)
-
     betweenness = nx.betweenness_centrality(g, normalized=True)
-    out_closeness = compute_out_closeness_centrality(g)
+    out_closeness = nx.closeness_centrality(
+        g.reverse(copy=False),
+        wf_improved=True,
+    )
     learning_effort = compute_learning_effort(g)
 
     rows = []
@@ -76,10 +59,15 @@ def compute_graph_metrics(g: nx.DiGraph) -> pd.DataFrame:
 
 
 def save_metrics(
-    input_graph_file: str = "ace_graph.csv",
+    edges_file: str = "ace_graph_edges.csv",
+    nodes_file: str = "ace_graph_nodes.csv",
     output_metrics_file: str = "ace_graph_metrics.csv",
 ):
-    g = load_graph_from_csv(input_graph_file)
+    g = load_graph_from_csv(
+        edges_file=edges_file,
+        nodes_file=nodes_file,
+    )
+
     metrics_df = compute_graph_metrics(g)
     metrics_df.to_csv(output_metrics_file, index=False, encoding="utf-8-sig")
 
@@ -91,6 +79,7 @@ def save_metrics(
 
 if __name__ == "__main__":
     save_metrics(
-        input_graph_file="ace_graph.csv",
+        edges_file="ace_graph_edges.csv",
+        nodes_file="ace_graph_nodes.csv",
         output_metrics_file="ace_graph_metrics.csv",
     )
