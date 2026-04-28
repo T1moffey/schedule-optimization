@@ -71,17 +71,6 @@ def cer(
 
     return sum(concept_title in chunk for chunk in chunks)
 
-
-def transitive_reduce(g: nx.DiGraph) -> nx.DiGraph:
-    if not nx.is_directed_acyclic_graph(g):
-        return g
-    reduced = nx.transitive_reduction(g)
-    out = nx.DiGraph()
-    out.add_nodes_from(g.nodes())
-    out.add_edges_from(reduced.edges())
-    return out
-
-
 def ask_expert(topic_a: str, topic_b: str, score_ab: float, score_ba: float, prs: float, mode: str) -> int:
     print("\n" + "=" * 80)
     print(f"Пара: {topic_a!r}  <->  {topic_b!r}")
@@ -215,7 +204,7 @@ def run_ace(
         else:
             g.add_edge(b, a)
 
-        g = transitive_reduce(g)
+        g = nx.transitive_reduction(g)
 
     return g, ranked_pairs, pair_scores
 
@@ -273,8 +262,8 @@ def save_graph(
     pd.DataFrame(list(g.edges()), columns=["source", "target"]).to_csv(edges_file, index=False, encoding="utf-8-sig")
 
 def run_from_csv(
-    csv_file="EKG-Dataset-main/0-100.csv",
-    descriptions_dir="EKG-Dataset-main/concept_descriptions",
+    csv_file="C:\\Users\\timofey\\YandexDisk\\Code\\thesis\\EKG-Dataset-main\\0-100.csv",
+    descriptions_dir="C:\\Users\\timofey\\YandexDisk\\Code\\thesis\\EKG-Dataset-main\\concept_descriptions",
     output_file="ace_graph.csv",
 ):
     _, topic_to_text = load_example(csv_file, descriptions_dir)
