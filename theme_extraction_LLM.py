@@ -12,7 +12,7 @@ from openai import OpenAI
 # =========================
 AUTH_KEY_ENV_NAME = "GIGACHAT_AUTH_KEY"
 
-INPUT_JSON_PATH = "thesis\\RPD_SPBU\\rpd_2_2.json"
+INPUT_JSON_PATH = "RPD_SPBU\\rpd_2_2.json"
 OUTPUT_JSON_PATH = "topics_all_courses.json"
 ERRORS_JSON_PATH = "topics_all_courses_errors.json"
 
