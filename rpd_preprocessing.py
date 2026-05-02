@@ -29,10 +29,42 @@ def extract_course_title(pdf_path: Path) -> str:
 
 def extract_pdf_text(pdf_path: Path) -> str:
     parts = []
+
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             parts.append(page.extract_text() or "")
+
     return normalize_text("\n".join(parts))
+
+
+def find_real_section_3_start(text: str, search_from: int) -> int | None:
+    tail = text[search_from:]
+
+    patterns = [
+        r"(?im)^\s*Раздел\s*3\.?\s*Обеспечение\s+учебных\s+занятий\b",
+        r"(?im)^\s*Раздел\s*3\.?\s*[^\n]{0,160}\n\s*3\.1\.?\s*Методическое\s+обеспечение\b",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, tail)
+        if match:
+            return search_from + match.start()
+
+    match_31 = re.search(
+        r"(?im)^\s*3\.1\.?\s*Методическое\s+обеспечение\b",
+        tail,
+    )
+
+    if match_31:
+        before_31 = tail[:match_31.start()]
+        candidates = list(re.finditer(r"(?im)^\s*Раздел\s*3\.?", before_31))
+
+        if candidates:
+            return search_from + candidates[-1].start()
+
+        return search_from + match_31.start()
+
+    return None
 
 
 def extract_section_22(full_text: str) -> str | None:
@@ -41,18 +73,15 @@ def extract_section_22(full_text: str) -> str | None:
         full_text,
         re.IGNORECASE,
     )
+
     if start_match is None:
         return None
 
-    end_match = re.search(
-        r"\bРаздел\s*3\b",
-        full_text[start_match.end():],
-        re.IGNORECASE,
-    )
-    if end_match is None:
+    end = find_real_section_3_start(full_text, start_match.end())
+
+    if end is None:
         return None
 
-    end = start_match.end() + end_match.start()
     section_text = full_text[start_match.end():end]
 
     return normalize_text(section_text)
